@@ -755,9 +755,9 @@ def main() -> int:
 
 if __name__ == "__main__":
     # 1. 完整运行第 1 个网站 (GLaDOS)
-    logger.info("========================================")
-    logger.info("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
-    logger.info("========================================")
+    print("========================================")
+    print("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
+    print("========================================")
     CHECKIN_URL = CHECKIN_URL_1
     STATUS_URL = STATUS_URL_1
     POINTS_URL = POINTS_URL_1
@@ -766,12 +766,12 @@ if __name__ == "__main__":
     try:
         exit_code_1 = main()
     except Exception as e:
-        logger.error(f"❌ GLaDOS 运行发生异常崩溃: {e}")
+        print(f"❌ GLaDOS 运行发生异常崩溃: {e}")
 
     # 2. 自动无缝切换变量，完整运行第 2 个网站 (Railgun)
-    logger.info("========================================")
-    logger.info("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
-    logger.info("========================================")
+    print("========================================")
+    print("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
+    print("========================================")
     CHECKIN_URL = CHECKIN_URL_2
     STATUS_URL = STATUS_URL_2
     POINTS_URL = POINTS_URL_2
@@ -780,9 +780,8 @@ if __name__ == "__main__":
     try:
         exit_code_2 = main()
     except Exception as e:
-        logger.error(f"❌ Railgun 运行发生异常崩溃: {e}")
+        print(f"❌ Railgun 运行发生异常崩溃: {e}")
 
     # 合并退出状态码
-    sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
-
+    import sys
     sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
