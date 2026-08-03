@@ -754,6 +754,12 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # 强制安全补丁：如果脚本前面漏掉了 logger 的定义，这里直接自动创建并补齐它
+    import logging
+    if 'logger' not in globals() or logger is None:
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
+        logger = logging.getLogger("AutoCheckin")
+
     # 1. 完整运行第 1 个网站 (GLaDOS)
     print("========================================")
     print("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
