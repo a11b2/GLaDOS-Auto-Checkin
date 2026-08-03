@@ -755,13 +755,10 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    # 声明我们要动态修改全局的网址配置
-    global CHECKIN_URL, STATUS_URL, POINTS_URL, EXCHANGE_URL
-    
     # 1. 完整运行第 1 个网站 (GLaDOS)
-    logger.info("========================================")
-    logger.info("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
-    logger.info("========================================")
+    print("========================================")
+    print("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
+    print("========================================")
     CHECKIN_URL = CHECKIN_URL_1
     STATUS_URL = STATUS_URL_1
     POINTS_URL = POINTS_URL_1
@@ -770,29 +767,22 @@ if __name__ == "__main__":
     try:
         exit_code_1 = main()
     except Exception as e:
-        logger.error(f"❌ GLaDOS 运行发生异常崩溃: {e}")
+        print(f"❌ GLaDOS 运行发生异常崩溃: {e}")
 
     # 2. 自动无缝切换变量，完整运行第 2 个网站 (Railgun)
-    logger.info("========================================")
-    logger.info("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
-    logger.info("========================================")
+    print("========================================")
+    print("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
+    print("========================================")
     CHECKIN_URL = CHECKIN_URL_2
     STATUS_URL = STATUS_URL_2
     POINTS_URL = POINTS_URL_2
     EXCHANGE_URL = EXCHANGE_URL_2
     exit_code_2 = 1
     try:
-        # 在原版 main() 函数中，推送标题写死了 "GLaDOS 签到完成"。
-        # 为了让第二个网站的推送标题正确，我们在这里用代码临时把 main 函数里的文本替换掉。
-        import types
-        if 'main' in globals():
-            # 动态让第二个网站的推送通知标题和缺失报错更准确
-            main_code = main.__code__
-            
         exit_code_2 = main()
     except Exception as e:
-        logger.error(f"❌ Railgun 运行发生异常崩溃: {e}")
+        print(f"❌ Railgun 运行发生异常崩溃: {e}")
 
-    # 合并退出状态码（只要有一个网站全失败，CI 就会报错提示，确保安全）
+    # 合并退出状态码
+    import sys
     sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
-
