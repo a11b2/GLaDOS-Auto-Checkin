@@ -521,26 +521,48 @@ def classify_checkin(code: Any, message: str) -> str:
 
 @retry_on_failure()
 def checkin_request(session: requests.Session, headers: Dict[str, str]) -> Dict[str, Any]:
-    """执行签到请求（恢复原样，只发单次）"""
-    r = session.post(CHECKIN_URL, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
+    """执行签到请求（无视任何篡改，底层强制注入长接口）"""
+    # 动态根据当前正在跑的网站域名，强制补齐小尾巴，彻底封死 404
+    target_url = CHECKIN_URL
+    if "railgun.info" in str(target_url):
+        target_url = "https://railgun.info"
+    else:
+        target_url = "https://glados.cloud"
+        
+    r = session.post(target_url, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
     r.raise_for_status()
     return require_json(r)
 
 
 @retry_on_failure()
 def api_get(session: requests.Session, url: str, headers: Dict[str, str]) -> Dict[str, Any]:
-    """查询账号状态/积分（恢复原样，只发单次）"""
-    r = session.get(url, headers=headers, timeout=TIMEOUT)
+    """查询账号状态/积分（底层强制注入长接口）"""
+    target_url = url
+    if "railgun.info" in str(target_url):
+        if "status" in str(target_url): target_url = "https://railgun.info"
+        elif "points" in str(target_url): target_url = "https://railgun.info"
+    else:
+        if "status" in str(target_url): target_url = "https://glados.cloud"
+        elif "points" in str(target_url): target_url = "https://glados.cloud"
+
+    r = session.get(target_url, headers=headers, timeout=TIMEOUT)
     r.raise_for_status()
     return require_json(r)
 
 
 @retry_on_failure()
 def exchange_request(session: requests.Session, headers: Dict[str, str], plan: str) -> Dict[str, Any]:
-    """执行积分兑换请求（恢复原样，只发单次）"""
-    r = session.post(EXCHANGE_URL, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
+    """执行积分兑换请求（底层强制注入长接口）"""
+    target_url = EXCHANGE_URL
+    if "railgun.info" in str(target_url):
+        target_url = "https://railgun.info"
+    else:
+        target_url = "https://glados.cloud"
+
+    r = session.post(target_url, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
     r.raise_for_status()
     return require_json(r)
+
 
 
 
