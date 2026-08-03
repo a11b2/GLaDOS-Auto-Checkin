@@ -37,6 +37,7 @@ POINTS_URL = POINTS_URL_1
 EXCHANGE_URL = EXCHANGE_URL_1
 
 
+
 HEADERS_BASE = {
     "origin": "https://glados.cloud",
     "referer": "https://glados.cloud/console/checkin",
