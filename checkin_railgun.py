@@ -750,4 +750,36 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # 在 Railgun 运行前，拦截并重写原版的 push_all 推送函数
+    import sys
+    original_push_all = globals().get('push_all')
+
+    def combined_push_all(title, content):
+        glados_content = ""
+        # 1. 尝试读取上一步 GLaDOS 的运行结果
+        try:
+            import os
+            if os.path.exists("glados_result.txt"):
+                with open("glados_result.txt", "r", encoding="utf-8") as f:
+                    glados_content = f.read()
+        except Exception:
+            glados_content = "⚠️ GLaDOS 结果读取失败"
+
+        # 2. 将两边的结果拼接到一起
+        new_title = "🌟 机场签到联合汇总报告 🌟"
+        new_content = (
+            f"【1. GLaDOS 签到结果】\n{glados_content}\n\n"
+            f"【2. Railgun 签到结果】\n{content}"
+        )
+        
+        # 3. 调用原版推送函数，一次性发出
+        if original_push_all:
+            return original_push_all(new_title, new_content)
+        return False, 0
+
+    # 注入合并推送逻辑
+    if original_push_all:
+        globals()['push_all'] = combined_push_all
+
+    # 正常运行 Railgun 签到，它会自动触发合并后的通知
     sys.exit(main())
