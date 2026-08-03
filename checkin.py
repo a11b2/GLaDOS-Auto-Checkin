@@ -750,24 +750,26 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    # 强制不触发外部推送通知
-    def dummy_push(*args, **kwargs): return True, 0
-    if 'push_all' in globals():
-        globals()['push_all'] = dummy_push
+    # 建立一个钩子函数，用来偷偷截获 GLaDOS 最终生成的通知内容
+    glados_report_content = "⚠️ 未能捕获到详细账单"
 
-    # 正常运行 GLaDOS 签到
+    def shadow_push_all(title, content):
+        global glados_report_content
+        glados_report_content = content  # 成功截获 11 个账号的详细文本
+        return True, 0  # 返回假状态，阻止其发送真实微信通知
+
+    # 替换原版的 push_all
+    if 'push_all' in globals():
+        globals()['push_all'] = shadow_push_all
+
+    # 让主流程正常跑，此时它所有的通知数据都会流进 shadow_push_all 
     exit_code = main()
     
-    # 将 GLaDOS 的内容临时存起来，留给下一个脚本读取
+    # 跑完后，把截获到的完美详细账单写入临时文件
     try:
-        # 尝试从日志中截取汇总内容，如果找不到就用基本提示
-        content = "GLaDOS 签到已完成，等待合并..."
-        if 'content' in locals() or 'content' in globals():
-            content = globals().get('content') or locals().get('content')
-            
         with open("glados_result.txt", "w", encoding="utf-8") as f:
-            f.write(str(content))
-    except Exception:
-        pass
+            f.write(str(glados_report_content))
+    except Exception as e:
+        print(f"写入临时文件失败: {e}")
         
     sys.exit(exit_code)
