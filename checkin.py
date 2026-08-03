@@ -513,31 +513,61 @@ def classify_checkin(code: Any, message: str) -> str:
 
 @retry_on_failure()
 def checkin_request(session: requests.Session, headers: Dict[str, str]) -> Dict[str, Any]:
-    """执行签到请求（带重试）"""
-    r = session.post(CHECKIN_URL, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
-    r.raise_for_status()
-    return require_json(r)  # 非 JSON 响应抛异常进入重试（M1）
+    """执行签到请求（全面适配多网址循环）"""
+    last_resp = {}
+    # 检查 CHECKIN_URL 是列表还是单个字符串，如果是单个字符串就变成列表
+    urls = CHECKIN_URL if isinstance(CHECKIN_URL, list) else [CHECKIN_URL]
+    
+    for url in urls:
+        try:
+            logger.info(f"正在向网址发送签到请求: {url}")
+            r = session.post(url, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
+            r.raise_for_status()
+            last_resp = require_json(r)
+        except Exception as e:
+            logger.error(f"网址 {url} 签到动作请求失败: {e}")
+            # 如果第一个网站挂了，继续跑第二个网站
+            continue
+            
+    # 返回最后一个成功执行的响应给外层解析状态（通常两个网站返回格式是一样的）
+    return last_resp
 
 
 @retry_on_failure()
 def api_get(session: requests.Session, url: str, headers: Dict[str, str]) -> Dict[str, Any]:
-    """查询账号状态/积分（带重试）"""
-    r = session.get(url, headers=headers, timeout=TIMEOUT)
-    r.raise_for_status()
-    return require_json(r)  # 非 JSON 响应抛异常进入重试（M1）
+    """查询账号状态/积分（兼容传入列表或单个URL）"""
+    last_resp = {}
+    urls = url if isinstance(url, list) else [url]
+    
+    for u in urls:
+        try:
+            r = session.get(u, headers=headers, timeout=TIMEOUT)
+            r.raise_for_status()
+            last_resp = require_json(r)
+        except Exception as e:
+            logger.warning(f"网址 {u} 查询信息失败: {e}")
+            continue
+            
+    return last_resp
 
 
 @retry_on_failure()
 def exchange_request(session: requests.Session, headers: Dict[str, str], plan: str) -> Dict[str, Any]:
-    """
-    执行积分兑换请求（带重试，#9 功能请求）。
+    """执行积分兑换请求（兼容传入列表或单个URL）"""
+    last_resp = {}
+    urls = EXCHANGE_URL if isinstance(EXCHANGE_URL, list) else [EXCHANGE_URL]
+    
+    for url in urls:
+        try:
+            r = session.post(url, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
+            r.raise_for_status()
+            last_resp = require_json(r)
+        except Exception as e:
+            logger.warning(f"网址 {url} 兑换失败: {e}")
+            continue
+            
+    return last_resp
 
-    GLaDOS 兑换接口以表单形式提交 planType（plan100/plan200/plan500），
-    响应 JSON 中 code==0 表示兑换成功。
-    """
-    r = session.post(EXCHANGE_URL, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
-    r.raise_for_status()
-    return require_json(r)  # 非 JSON 响应抛异常进入重试（M1）
 
 
 def checkin_account(
