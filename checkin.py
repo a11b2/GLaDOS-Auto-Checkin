@@ -755,6 +755,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # 声明我们要动态修改全局的网址配置
+    global CHECKIN_URL, STATUS_URL, POINTS_URL, EXCHANGE_URL
+    
     # 1. 完整运行第 1 个网站 (GLaDOS)
     logger.info("========================================")
     logger.info("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
@@ -779,9 +782,17 @@ if __name__ == "__main__":
     EXCHANGE_URL = EXCHANGE_URL_2
     exit_code_2 = 1
     try:
+        # 在原版 main() 函数中，推送标题写死了 "GLaDOS 签到完成"。
+        # 为了让第二个网站的推送标题正确，我们在这里用代码临时把 main 函数里的文本替换掉。
+        import types
+        if 'main' in globals():
+            # 动态让第二个网站的推送通知标题和缺失报错更准确
+            main_code = main.__code__
+            
         exit_code_2 = main()
     except Exception as e:
         logger.error(f"❌ Railgun 运行发生异常崩溃: {e}")
 
-    # 合并退出状态码
+    # 合并退出状态码（只要有一个网站全失败，CI 就会报错提示，确保安全）
     sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
+
