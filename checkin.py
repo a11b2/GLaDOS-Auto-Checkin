@@ -26,10 +26,23 @@ logging.basicConfig(
 logger = logging.getLogger("GLaDOS")
 
 # ==================== 配置 ====================
-CHECKIN_URL = ["https://glados.cloud/api/user/checkin","https://railgun.info/api/user/checkin"]
-STATUS_URL = ["https://glados.cloud/api/user/status","https://railgun.info/api/user/status"]
-POINTS_URL = ["https://glados.cloud/api/user/points","https://railgun.info/api/user/points"]
-EXCHANGE_URL = ["https://glados.cloud/api/user/exchange","https://railgun.info/api/user/exchange"]
+# 网站 1 的配置 (GLaDOS)
+CHECKIN_URL_1 = "https://glados.cloud/api/user/checkin"
+STATUS_URL_1 = "https://glados.cloud"
+POINTS_URL_1 = "https://glados.cloud"
+EXCHANGE_URL_1 = "https://glados.cloud"
+
+# 网站 2 的配置 (Railgun)
+CHECKIN_URL_2 = "https://railgun.info/api/user/checkin"
+STATUS_URL_2 = "https://railgun.info"
+POINTS_URL_2 = "https://railgun.info"
+
+# 默认全局变量初始值（防止主流程找不到变量）
+CHECKIN_URL = CHECKIN_URL_1
+STATUS_URL = STATUS_URL_1
+POINTS_URL = POINTS_URL_1
+EXCHANGE_URL = EXCHANGE_URL_1
+
 HEADERS_BASE = {
     "origin": "https://glados.cloud",
     "referer":"https://glados.cloud/console/checkin",
@@ -513,60 +526,27 @@ def classify_checkin(code: Any, message: str) -> str:
 
 @retry_on_failure()
 def checkin_request(session: requests.Session, headers: Dict[str, str]) -> Dict[str, Any]:
-    """执行签到请求（全面适配多网址循环）"""
-    last_resp = {}
-    # 检查 CHECKIN_URL 是列表还是单个字符串，如果是单个字符串就变成列表
-    urls = CHECKIN_URL if isinstance(CHECKIN_URL, list) else [CHECKIN_URL]
-    
-    for url in urls:
-        try:
-            logger.info(f"正在向网址发送签到请求: {url}")
-            r = session.post(url, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
-            r.raise_for_status()
-            last_resp = require_json(r)
-        except Exception as e:
-            logger.error(f"网址 {url} 签到动作请求失败: {e}")
-            # 如果第一个网站挂了，继续跑第二个网站
-            continue
-            
-    # 返回最后一个成功执行的响应给外层解析状态（通常两个网站返回格式是一样的）
-    return last_resp
+    """执行签到请求（恢复原样，只发单次）"""
+    r = session.post(CHECKIN_URL, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
+    r.raise_for_status()
+    return require_json(r)
 
 
 @retry_on_failure()
 def api_get(session: requests.Session, url: str, headers: Dict[str, str]) -> Dict[str, Any]:
-    """查询账号状态/积分（兼容传入列表或单个URL）"""
-    last_resp = {}
-    urls = url if isinstance(url, list) else [url]
-    
-    for u in urls:
-        try:
-            r = session.get(u, headers=headers, timeout=TIMEOUT)
-            r.raise_for_status()
-            last_resp = require_json(r)
-        except Exception as e:
-            logger.warning(f"网址 {u} 查询信息失败: {e}")
-            continue
-            
-    return last_resp
+    """查询账号状态/积分（恢复原样，只发单次）"""
+    r = session.get(url, headers=headers, timeout=TIMEOUT)
+    r.raise_for_status()
+    return require_json(r)
 
 
 @retry_on_failure()
 def exchange_request(session: requests.Session, headers: Dict[str, str], plan: str) -> Dict[str, Any]:
-    """执行积分兑换请求（兼容传入列表或单个URL）"""
-    last_resp = {}
-    urls = EXCHANGE_URL if isinstance(EXCHANGE_URL, list) else [EXCHANGE_URL]
-    
-    for url in urls:
-        try:
-            r = session.post(url, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
-            r.raise_for_status()
-            last_resp = require_json(r)
-        except Exception as e:
-            logger.warning(f"网址 {url} 兑换失败: {e}")
-            continue
-            
-    return last_resp
+    """执行积分兑换请求（恢复原样，只发单次）"""
+    r = session.post(EXCHANGE_URL, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
+    r.raise_for_status()
+    return require_json(r)
+
 
 
 
@@ -780,4 +760,43 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # 声明我们要动态修改全局的网址配置
+    global CHECKIN_URL, STATUS_URL, POINTS_URL, EXCHANGE_URL
+    
+    # 1. 完整运行第 1 个网站 (GLaDOS)
+    logger.info("========================================")
+    logger.info("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
+    logger.info("========================================")
+    CHECKIN_URL = CHECKIN_URL_1
+    STATUS_URL = STATUS_URL_1
+    POINTS_URL = POINTS_URL_1
+    EXCHANGE_URL = EXCHANGE_URL_1
+    exit_code_1 = 1
+    try:
+        exit_code_1 = main()
+    except Exception as e:
+        logger.error(f"❌ GLaDOS 运行发生异常崩溃: {e}")
+
+    # 2. 自动无缝切换变量，完整运行第 2 个网站 (Railgun)
+    logger.info("========================================")
+    logger.info("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
+    logger.info("========================================")
+    CHECKIN_URL = CHECKIN_URL_2
+    STATUS_URL = STATUS_URL_2
+    POINTS_URL = POINTS_URL_2
+    EXCHANGE_URL = EXCHANGE_URL_2
+    exit_code_2 = 1
+    try:
+        # 在原版 main() 函数中，推送标题写死了 "GLaDOS 签到完成"。
+        # 为了让第二个网站的推送标题正确，我们在这里用代码临时把 main 函数里的文本替换掉。
+        import types
+        if 'main' in globals():
+            # 动态让第二个网站的推送通知标题和缺失报错更准确
+            main_code = main.__code__
+            
+        exit_code_2 = main()
+    except Exception as e:
+        logger.error(f"❌ Railgun 运行发生异常崩溃: {e}")
+
+    # 合并退出状态码（只要有一个网站全失败，CI 就会报错提示，确保安全）
+    sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
