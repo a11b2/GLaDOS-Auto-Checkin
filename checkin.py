@@ -750,4 +750,24 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    # 强制不触发外部推送通知
+    def dummy_push(*args, **kwargs): return True, 0
+    if 'push_all' in globals():
+        globals()['push_all'] = dummy_push
+
+    # 正常运行 GLaDOS 签到
+    exit_code = main()
+    
+    # 将 GLaDOS 的内容临时存起来，留给下一个脚本读取
+    try:
+        # 尝试从日志中截取汇总内容，如果找不到就用基本提示
+        content = "GLaDOS 签到已完成，等待合并..."
+        if 'content' in locals() or 'content' in globals():
+            content = globals().get('content') or locals().get('content')
+            
+        with open("glados_result.txt", "w", encoding="utf-8") as f:
+            f.write(str(content))
+    except Exception:
+        pass
+        
+    sys.exit(exit_code)
