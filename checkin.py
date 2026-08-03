@@ -761,28 +761,30 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
         logger = logging.getLogger("AutoCheckin")
 
-    # 1. 完整运行第 1 个网站 (GLaDOS)
+    # 1. 强制重置变量为第 1 个网站 (GLaDOS)
     print("========================================")
     print("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
     print("========================================")
-    CHECKIN_URL = CHECKIN_URL_1
-    STATUS_URL = STATUS_URL_1
-    POINTS_URL = POINTS_URL_1
-    EXCHANGE_URL = EXCHANGE_URL_1
+    CHECKIN_URL = "https://glados.cloud"
+    STATUS_URL = "https://glados.cloud"
+    POINTS_URL = "https://glados.cloud"
+    EXCHANGE_URL = "https://glados.cloud"
+    
     exit_code_1 = 1
     try:
         exit_code_1 = main()
     except Exception as e:
         print(f"❌ GLaDOS 运行发生异常崩溃: {e}")
 
-    # 2. 自动无缝切换变量，完整运行第 2 个网站 (Railgun)
+    # 2. 强制重置变量为第 2 个网站 (Railgun)
     print("========================================")
     print("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
     print("========================================")
-    CHECKIN_URL = CHECKIN_URL_2
-    STATUS_URL = STATUS_URL_2
-    POINTS_URL = POINTS_URL_2
-    EXCHANGE_URL = EXCHANGE_URL_2
+    CHECKIN_URL = "https://railgun.info"
+    STATUS_URL = "https://railgun.info"
+    POINTS_URL = "https://railgun.info"
+    EXCHANGE_URL = "https://railgun.info"
+    
     exit_code_2 = 1
     try:
         exit_code_2 = main()
