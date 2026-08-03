@@ -17,27 +17,19 @@ from typing import List, Dict, Any, Tuple, Optional, Callable
 from functools import wraps
 import requests
 
+# ==================== 日志配置 ====================
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger("GLaDOS")
+
 # ==================== 配置 ====================
-# 网站 1 的配置 (GLaDOS)
-CHECKIN_URL_1 = "https://glados.cloud"
-STATUS_URL_1 = "https://glados.cloud"
-POINTS_URL_1 = "https://glados.cloud"
-EXCHANGE_URL_1 = "https://glados.cloud"
-
-# 网站 2 的配置 (Railgun)
-CHECKIN_URL_2 = "https://railgun.info"
-STATUS_URL_2 = "https://railgun.info"
-POINTS_URL_2 = "https://railgun.info"
-EXCHANGE_URL_2 = "https://railgun.info"
-
-# 默认全局变量初始值
-CHECKIN_URL = CHECKIN_URL_1
-STATUS_URL = STATUS_URL_1
-POINTS_URL = POINTS_URL_1
-EXCHANGE_URL = EXCHANGE_URL_1
-
-
-
+CHECKIN_URL = "https://glados.cloud/api/user/checkin"
+STATUS_URL = "https://glados.cloud/api/user/status"
+POINTS_URL = "https://glados.cloud/api/user/points"
+EXCHANGE_URL = "https://glados.cloud/api/user/exchange"
 HEADERS_BASE = {
     "origin": "https://glados.cloud",
     "referer": "https://glados.cloud/console/checkin",
@@ -521,50 +513,31 @@ def classify_checkin(code: Any, message: str) -> str:
 
 @retry_on_failure()
 def checkin_request(session: requests.Session, headers: Dict[str, str]) -> Dict[str, Any]:
-    """执行签到请求（无视任何篡改，底层强制注入长接口）"""
-    # 动态根据当前正在跑的网站域名，强制补齐小尾巴，彻底封死 404
-    target_url = CHECKIN_URL
-    if "railgun.info" in str(target_url):
-        target_url = "https://railgun.info"
-    else:
-        target_url = "https://glados.cloud"
-        
-    r = session.post(target_url, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
+    """执行签到请求（带重试）"""
+    r = session.post(CHECKIN_URL, headers=headers, json=PAYLOAD, timeout=TIMEOUT)
     r.raise_for_status()
-    return require_json(r)
+    return require_json(r)  # 非 JSON 响应抛异常进入重试（M1）
 
 
 @retry_on_failure()
 def api_get(session: requests.Session, url: str, headers: Dict[str, str]) -> Dict[str, Any]:
-    """查询账号状态/积分（底层强制注入长接口）"""
-    target_url = url
-    if "railgun.info" in str(target_url):
-        if "status" in str(target_url): target_url = "https://railgun.info"
-        elif "points" in str(target_url): target_url = "https://railgun.info"
-    else:
-        if "status" in str(target_url): target_url = "https://glados.cloud"
-        elif "points" in str(target_url): target_url = "https://glados.cloud"
-
-    r = session.get(target_url, headers=headers, timeout=TIMEOUT)
+    """查询账号状态/积分（带重试）"""
+    r = session.get(url, headers=headers, timeout=TIMEOUT)
     r.raise_for_status()
-    return require_json(r)
+    return require_json(r)  # 非 JSON 响应抛异常进入重试（M1）
 
 
 @retry_on_failure()
 def exchange_request(session: requests.Session, headers: Dict[str, str], plan: str) -> Dict[str, Any]:
-    """执行积分兑换请求（底层强制注入长接口）"""
-    target_url = EXCHANGE_URL
-    if "railgun.info" in str(target_url):
-        target_url = "https://railgun.info"
-    else:
-        target_url = "https://glados.cloud"
+    """
+    执行积分兑换请求（带重试，#9 功能请求）。
 
-    r = session.post(target_url, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
+    GLaDOS 兑换接口以表单形式提交 planType（plan100/plan200/plan500），
+    响应 JSON 中 code==0 表示兑换成功。
+    """
+    r = session.post(EXCHANGE_URL, headers=headers, data={"planType": plan}, timeout=TIMEOUT)
     r.raise_for_status()
-    return require_json(r)
-
-
-
+    return require_json(r)  # 非 JSON 响应抛异常进入重试（M1）
 
 
 def checkin_account(
@@ -775,43 +748,6 @@ def main() -> int:
         logger.warning("⚠️ 已配置推送渠道但全部发送失败，无人收到通知（不影响运行结果）")
     return 0
 
+
 if __name__ == "__main__":
-    # 强制安全补丁：如果脚本前面漏掉了 logger 的定义，这里直接自动创建并补齐它
-    import logging
-    if 'logger' not in globals() or logger is None:
-        logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
-        logger = logging.getLogger("AutoCheckin")
-
-    # 1. 强制重置变量为第 1 个网站 (GLaDOS) 完整的接口路径
-    print("========================================")
-    print("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
-    print("========================================")
-    CHECKIN_URL = "https://glados.cloud"
-    STATUS_URL = "https://glados.cloud"
-    POINTS_URL = "https://glados.cloud"
-    EXCHANGE_URL = "https://glados.cloud"
-    
-    exit_code_1 = 1
-    try:
-        exit_code_1 = main()
-    except Exception as e:
-        print(f"❌ GLaDOS 运行发生异常崩溃: {e}")
-
-    # 2. 强制重置变量为第 2 个网站 (Railgun) 完整的接口路径
-    print("========================================")
-    print("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
-    print("========================================")
-    CHECKIN_URL = "https://railgun.info"
-    STATUS_URL = "https://railgun.info"
-    POINTS_URL = "https://railgun.info"
-    EXCHANGE_URL = "https://railgun.info"
-    
-    exit_code_2 = 1
-    try:
-        exit_code_2 = main()
-    except Exception as e:
-        print(f"❌ Railgun 运行发生异常崩溃: {e}")
-
-    # 合并退出状态码
-    import sys
-    sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
+    sys.exit(main())
