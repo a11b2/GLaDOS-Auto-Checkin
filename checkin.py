@@ -17,31 +17,25 @@ from typing import List, Dict, Any, Tuple, Optional, Callable
 from functools import wraps
 import requests
 
-# ==================== 日志配置 ====================
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-logger = logging.getLogger("GLaDOS")
-
 # ==================== 配置 ====================
 # 网站 1 的配置 (GLaDOS)
-CHECKIN_URL_1 = "https://glados.cloud/api/user/checkin"
+CHECKIN_URL_1 = "https://glados.cloud"
 STATUS_URL_1 = "https://glados.cloud"
 POINTS_URL_1 = "https://glados.cloud"
 EXCHANGE_URL_1 = "https://glados.cloud"
 
 # 网站 2 的配置 (Railgun)
-CHECKIN_URL_2 = "https://railgun.info/api/user/checkin"
+CHECKIN_URL_2 = "https://railgun.info"
 STATUS_URL_2 = "https://railgun.info"
 POINTS_URL_2 = "https://railgun.info"
+EXCHANGE_URL_2 = "https://railgun.info"
 
-# 默认全局变量初始值（防止主流程找不到变量）
+# 默认全局变量初始值
 CHECKIN_URL = CHECKIN_URL_1
 STATUS_URL = STATUS_URL_1
 POINTS_URL = POINTS_URL_1
 EXCHANGE_URL = EXCHANGE_URL_1
+
 
 HEADERS_BASE = {
     "origin": "https://glados.cloud",
@@ -51,10 +45,6 @@ HEADERS_BASE = {
         "AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36"
     ),
-    # 注意：使用 requests 的 json= 参数时会自动设置 Content-Type: application/json，
-    # 此处无需（也不应）手动设置 content-type，否则与 requests 默认行为重复。
-}
-
     # 注意：使用 requests 的 json= 参数时会自动设置 Content-Type: application/json，
     # 此处无需（也不应）手动设置 content-type，否则与 requests 默认行为重复。
 }
