@@ -30,8 +30,18 @@ jobs:
       - name: Install dependencies
         run: pip install "requests==2.32.3" --no-cache-dir
 
-      - name: Run checkin
-        run: python checkin.py
+      - name: Run checkin (GLaDOS & Railgun)
+        # 用管道符号 | 让 Actions 能够连续执行多条命令
+        run: |
+          echo "========================================"
+          echo "=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ==="
+          echo "========================================"
+          python checkin.py
+          
+          echo "========================================"
+          echo "=== 🚀 正在执行第 2 个网站签到 (Railgun) ==="
+          echo "========================================"
+          python checkin_railgun.py
         env:
           COOKIES: ${{ secrets.COOKIES }}
           SENDKEY: ${{ secrets.SENDKEY }}
