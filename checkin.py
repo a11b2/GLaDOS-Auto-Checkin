@@ -753,7 +753,6 @@ def main() -> int:
         logger.warning("⚠️ 已配置推送渠道但全部发送失败，无人收到通知（不影响运行结果）")
     return 0
 
-
 if __name__ == "__main__":
     # 强制安全补丁：如果脚本前面漏掉了 logger 的定义，这里直接自动创建并补齐它
     import logging
@@ -761,7 +760,7 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
         logger = logging.getLogger("AutoCheckin")
 
-    # 1. 强制重置变量为第 1 个网站 (GLaDOS)
+    # 1. 强制重置变量为第 1 个网站 (GLaDOS) 完整的接口路径
     print("========================================")
     print("=== 🚀 正在执行第 1 个网站签到 (GLaDOS) ===")
     print("========================================")
@@ -776,7 +775,7 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"❌ GLaDOS 运行发生异常崩溃: {e}")
 
-    # 2. 强制重置变量为第 2 个网站 (Railgun)
+    # 2. 强制重置变量为第 2 个网站 (Railgun) 完整的接口路径
     print("========================================")
     print("=== 🚀 正在执行第 2 个网站签到 (Railgun) ===")
     print("========================================")
@@ -794,4 +793,3 @@ if __name__ == "__main__":
     # 合并退出状态码
     import sys
     sys.exit(0 if (exit_code_1 == 0 and exit_code_2 == 0) else 1)
-
