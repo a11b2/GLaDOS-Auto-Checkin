@@ -26,13 +26,13 @@ logging.basicConfig(
 logger = logging.getLogger("GLaDOS")
 
 # ==================== 配置 ====================
-CHECKIN_URL = ["https://glados.cloud/api/user/checkin"，"https://railgun.info/api/user/checkin"]
-STATUS_URL = ["https://glados.cloud/api/user/status"，"https://railgun.info/api/user/status"]
-POINTS_URL = ["https://glados.cloud/api/user/points"，"https://railgun.info/api/user/points"]
-EXCHANGE_URL = ["https://glados.cloud/api/user/exchange"，"https://railgun.info/api/user/exchange"]
+CHECKIN_URL = ["https://glados.cloud/api/user/checkin","https://railgun.info/api/user/checkin"]
+STATUS_URL = ["https://glados.cloud/api/user/status","https://railgun.info/api/user/status"]
+POINTS_URL = ["https://glados.cloud/api/user/points","https://railgun.info/api/user/points"]
+EXCHANGE_URL = ["https://glados.cloud/api/user/exchange","https://railgun.info/api/user/exchange"]
 HEADERS_BASE = {
-    "origin": ["https://glados.cloud","https://railgun.info"，]
-    "referer": ["https://glados.cloud/console/checkin","https://railgun.info/console/checkin"，]
+    "origin": ["https://glados.cloud","https://railgun.info",]
+    "referer": ["https://glados.cloud/console/checkin","https://railgun.info/console/checkin",]
     "user-agent": (
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) "
