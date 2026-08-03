@@ -750,36 +750,39 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    # 在 Railgun 运行前，拦截并重写原版的 push_all 推送函数
-    import sys
+    import os
     original_push_all = globals().get('push_all')
 
     def combined_push_all(title, content):
-        glados_content = ""
-        # 1. 尝试读取上一步 GLaDOS 的运行结果
+        glados_content = "⚠️ GLaDOS 运行结果未生成"
+        # 1. 尝试读取上一步 GLaDOS 保存下来的详细账单
         try:
-            import os
             if os.path.exists("glados_result.txt"):
                 with open("glados_result.txt", "r", encoding="utf-8") as f:
                     glados_content = f.read()
-        except Exception:
-            glados_content = "⚠️ GLaDOS 结果读取失败"
+                # 读完后顺手删掉临时文件，保持干净
+                os.remove("glados_result.txt")
+        except Exception as e:
+            glados_content = f"⚠️ GLaDOS 结果读取异常: {e}"
 
-        # 2. 将两边的结果拼接到一起
-        new_title = "🌟 机场签到联合汇总报告 🌟"
+        # 2. 组装最终的全量联合通知
+        new_title = "🌟 机场双平台签到联合汇总报告 🌟"
         new_content = (
-            f"【1. GLaDOS 签到结果】\n{glados_content}\n\n"
-            f"【2. Railgun 签到结果】\n{content}"
+            f"【1. GLaDOS 签到详细结果】\n"
+            f"{glados_content}\n"
+            f"{'='*30}\n"
+            f"【2. Railgun 签到详细结果】\n"
+            f"{content}"
         )
         
-        # 3. 调用原版推送函数，一次性发出
+        # 3. 呼叫原版推送，一次性发给企业微信/PushPlus
         if original_push_all:
             return original_push_all(new_title, new_content)
         return False, 0
 
-    # 注入合并推送逻辑
+    # 注入联合推送逻辑
     if original_push_all:
         globals()['push_all'] = combined_push_all
 
-    # 正常运行 Railgun 签到，它会自动触发合并后的通知
+    # 正常运行 Railgun 签到
     sys.exit(main())
